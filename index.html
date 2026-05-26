@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhan Mandi Weight Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f4f7fc;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container { max-width: 1300px; margin: 0 auto; }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.8rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+        .tabs {
+            display: flex;
+            gap: 12px;
+            border-bottom: 3px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+        .tab {
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 24px;
+            cursor: pointer;
+            border-radius: 30px;
+            color: #4b5563;
+        }
+        .tab.active { background: #1e3a8a; color: white; }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+        .form-group { flex: 1; min-width: 160px; }
+        label {
+            font-size: 0.87rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            font-size: 1rem;
+        }
+        button {
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 32px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { background: #2563eb; }
+        .btn-danger {
+            background: #dc2626;
+        }
+        .btn-danger:hover { background: #b91c1c; }
+        .warning {
+            background: #fff3e0;
+            border-left: 6px solid #f97316;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            color: #c2410c;
+        }
+        .group-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+        }
+        .group-header {
+            background: #f1f5f9;
+            padding: 12px 18px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .entry-row {
+            padding: 12px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .del-btn {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .del-btn:hover { background: #dc2626; color: white; }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .summary-table th, .summary-table td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+        }
+        .summary-table th {
+            background: #f1f5f9;
+        }
+        .grand-total {
+            background: #1e3a8a;
+            color: white;
+            font-weight: bold;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .reset-section {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+        @media (max-width: 640px) {
+            body { padding: 12px; }
+            .group-header { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" data-page="entry">📝 Weight Entry</div>
+            <div class="tab" data-page="summary">🧾 Poora Hisab (Groupwise)</div>
+        </div>
+
+        <!-- Entry Page -->
+        <div id="entryPage" class="page active">
+            <h3>➕ New Weight Entry</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Current Group</label>
+                    <input type="text" id="groupDisplay" readonly style="background:#f1f5f9; font-weight:600;">
+                </div>
+                <div class="form-group">
+                    <label>Machine Weight (kg)</label>
+                    <input type="number" id="machineWeight" step="0.01" placeholder="125.5">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button id="addEntryBtn">➕ Add Entry (3 Bori)</button>
+                </div>
+            </div>
+            <div style="margin: 8px 0 0 10px; font-size:0.85rem; color:#475569;">ℹ️ Each entry adds 3 bori automatically.</div>
+
+            <div style="margin: 20px 0; background:#f8fafc; padding:15px; border-radius:16px;">
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                    <span>🎯 Target: <span id="targetDisplay">50</span> Quintal</span>
+                    <span>📦 Total Machine Weight: <span id="totalWeightDisplay">0</span> kg</span>
+                </div>
+                <div style="background:#e2e8f0; height:28px; border-radius:40px; margin-top:8px; overflow:hidden;">
+                    <div id="progressFill" style="background:linear-gradient(90deg,#1e3a8a,#3b82f6); height:100%; width:0%; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; color:white; font-weight:bold;">0%</div>
+                </div>
+                <button id="setTargetBtn" style="margin-top:10px;">🎯 Change Target (Quintal)</button>
+                <div id="warningMessage" class="warning" style="display: none;"></div>
+            </div>
+
+            <div id="entriesContainer"></div>
+
+            <div class="reset-section">
+                <button id="resetAllBtn" class="btn-danger">🗑️ Reset All Data</button>
+            </div>
+        </div>
+
+        <!-- Summary Page -->
+        <div id="summaryPage" class="page">
+            <h3>📊 Groupwise Summary & Grand Total</h3>
+            <div id="summaryContent"></div>
+            <div class="reset-section">
+                <button id="resetAllBtnSummary" class="btn-danger">🗑️ Reset All Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- DATA ----------
+    let allEntries = [];
+    let targetQuintal = 50;
+    let currentGroup = "Group A";
+    let groupCounter = 1;
+
+    // ---------- HELPERS ----------
+    function loadData() {
+        const stored = localStorage.getItem("weightTrackerData");
+        if (stored) {
+            try {
+                const data = JSON.parse(stored);
+                allEntries = data.entries || [];
+                targetQuintal = data.targetQuintal !== undefined ? data.targetQuintal : 50;
+                currentGroup = data.currentGroup || "Group A";
+                groupCounter = data.groupCounter || 1;
+            } catch(e) {}
+        }
+        if (allEntries.length > 0) {
+            const lastEntry = allEntries[allEntries.length - 1];
+            if (lastEntry && lastEntry.group) currentGroup = lastEntry.group;
+        } else {
+            currentGroup = "Group A";
+            groupCounter = 1;
+        }
+        updateGroupDisplay();
+    }
+
+    function saveData() {
+        localStorage.setItem("weightTrackerData", JSON.stringify({
+            entries: allEntries,
+            targetQuintal: targetQuintal,
+            currentGroup: currentGroup,
+            groupCounter: groupCounter
+        }));
+    }
+
+    function updateGroupDisplay() {
+        document.getElementById("groupDisplay").value = currentGroup;
+    }
+
+    function getNextGroupAfterAdd() {
+        const currentGroupEntries = allEntries.filter(e => e.group === currentGroup);
+        if (currentGroupEntries.length >= 10) {
+            groupCounter++;
+            currentGroup = `Group ${String.fromCharCode(64 + groupCounter)}`;
+            updateGroupDisplay();
+        }
+    }
+
+    function getTotalMachineWeight() {
+        return allEntries.reduce((sum, e) => sum + (e.machine || 0), 0);
+    }
+
+    function getTotalBoriCount() {
+        return allEntries.length * 3;
+    }
+
+    // ---------- WARNING & PROGRESS ----------
+    function updateProgressAndWarning() {
+        const totalKg = getTotalMachineWeight();
+        const targetKg = targetQuintal * 100;
+        let percent = (totalKg / targetKg) * 100;
+        const isOver = percent > 100;
+        const progressFill = document.getElementById("progressFill");
+        const warningDiv = document.getElementById("warningMessage");
+
+        if (isOver) {
+            progressFill.style.background = "linear-gradient(90deg, #dc2626, #f97316)";
+            const overPercent = percent.toFixed(1);
+            warningDiv.style.display = "block";
+            warningDiv.innerHTML = `⚠️ WARNING: Total weight (${totalKg.toFixed(2)} kg) is ${overPercent}% of target (${targetKg.toFixed(0)} kg). Target exceeded by ${(totalKg - targetKg).toFixed(2)} kg.`;
+            progressFill.style.width = `100%`;
+            progressFill.innerHTML = `${overPercent}% (Over)`;
+        } else {
+            progressFill.style.background = "linear-gradient(90deg, #1e3a8a, #3b82f6)";
+            warningDiv.style.display = "none";
+            let displayPercent = percent;
+            progressFill.style.width = `${displayPercent}%`;
+            progressFill.innerHTML = `${displayPercent.toFixed(1)}%`;
+        }
+        document.getElementById("totalWeightDisplay").innerHTML = `${totalKg.toFixed(2)} kg`;
+    }
+
+    // ---------- RENDER ENTRY PAGE ----------
+    function renderEntryPage() {
+        updateProgressAndWarning();
+        const container = document.getElementById("entriesContainer");
+        const grouped = {};
+        allEntries.forEach(e => {
+            if (!grouped[e.group]) grouped[e.group] = [];
+            grouped[e.group].push(e);
+        });
+
+        let html = '';
+        for (const [group, entries] of Object.entries(grouped)) {
+            const groupMachine = entries.reduce((s, e) => s + e.machine, 0);
+            const groupBoriCount = entries.length * 3;
+            html += `
+                <div class="group-card">
+                    <div class="group-header">
+                        <span>📁 ${group} (${entries.length}/10 entries)</span>
+                        <span>🔰 Group Total Machine: ${groupMachine.toFixed(2)} kg | 🛍️ Total Bori: ${groupBoriCount}</span>
+                    </div>`;
+            entries.forEach(entry => {
+                html += `
+                    <div class="entry-row">
+                        <div>⚙️ Machine: ${entry.machine.toFixed(2)} kg</div>
+                        <div><strong>${entry.machine.toFixed(2)} kg</strong> <button class="del-btn" data-id="${entry.id}">🗑️ Remove</button></div>
+                    </div>`;
+            });
+            html += `</div>`;
+        }
+        container.innerHTML = html || `<p style="text-align:center; padding:40px;">✨ No entries yet. Add your first weight! ✨</p>`;
+
+        // Delete with confirmation
+        document.querySelectorAll('.del-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.getAttribute('data-id'));
+                const entry = allEntries.find(e => e.id === id);
+                if (!entry) return;
+                const confirmDel = confirm(`Delete this entry?\nGroup: ${entry.group}\nMachine: ${entry.machine.toFixed(2)} kg\n(Each entry = 3 bori)\nThis action cannot be undone.`);
+                if (confirmDel) {
+                    allEntries = allEntries.filter(e => e.id !== id);
+                    if (allEntries.length === 0) {
+                        currentGroup = "Group A";
+                        groupCounter = 1;
+                        updateGroupDisplay();
+                    }
+                    saveData();
+                    renderAll();
+                }
+            });
+        });
+    }
+
+    // ---------- RENDER SUMMARY PAGE ----------
+    function renderSummaryPage() {
+        const container = document.getElementById("summaryContent");
+        if (allEntries.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:40px;">📭 No data to show. Add entries first.</div>`;
+            return;
+        }
+        const grouped = {};
+        allEntries.forEach(e => {
+            if (!grouped[e.group]) grouped[e.group] = [];
+            grouped[e.group].push(e);
+        });
+
+        let html = `<table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Entries</th>
+                                <th>Total Machine (kg)</th>
+                                <th>Total Bori Count</th>
+                                <th>Group Total (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+        let grandMachine = 0, grandBori = 0;
+        for (const [group, entries] of Object.entries(grouped)) {
+            const groupMachine = entries.reduce((s, e) => s + e.machine, 0);
+            const groupBori = entries.length * 3;
+            grandMachine += groupMachine;
+            grandBori += groupBori;
+            html += `<tr>
+                        <td><strong>${group}</strong></td>
+                        <td>${entries.length}</td>
+                        <td>${groupMachine.toFixed(2)} kg</td>
+                        <td>${groupBori}</td>
+                        <td><strong>${groupMachine.toFixed(2)} kg</strong></td>
+                    </tr>`;
+        }
+        html += `</tbody>
+                <tfoot>
+                    <tr class="grand-total">
+                        <td><strong>🎯 GRAND TOTAL</strong></td>
+                        <td><strong>${allEntries.length}</strong></td>
+                        <td><strong>${grandMachine.toFixed(2)} kg</strong></td>
+                        <td><strong>${grandBori}</strong></td>
+                        <td><strong>${grandMachine.toFixed(2)} kg</strong></td>
+                    </tr>
+                </tfoot>
+              </table>`;
+
+        const targetKg = targetQuintal * 100;
+        const overText = grandMachine > targetKg ? ` (Exceeds target by ${(grandMachine - targetKg).toFixed(2)} kg, ${((grandMachine/targetKg)*100).toFixed(1)}%)` : '';
+        html += `<div style="margin-top:20px; background:#eef2ff; padding:15px; border-radius:16px; text-align:center;">
+                    <p style="font-size:1.2rem;">🏆 Overall Total Machine Weight: <strong>${grandMachine.toFixed(2)} kg</strong> = <strong>${(grandMachine/100).toFixed(2)} Quintal</strong>${overText}</p>
+                    <p>🛍️ Total Bori Count: <strong>${grandBori}</strong> (each entry = 3 bori)</p>
+                    <p>🎯 Target: ${targetQuintal} Quintal (${targetKg} kg)</p>
+                 </div>`;
+        container.innerHTML = html;
+    }
+
+    function renderAll() {
+        renderEntryPage();
+        renderSummaryPage();
+        saveData();
+    }
+
+    // ---------- RESET ALL DATA (with confirmation) ----------
+    function resetAllData() {
+        const confirmReset = confirm("⚠️ Are you sure? This will delete ALL entries and reset target to 50 Quintal.\nThis action cannot be undone.");
+        if (confirmReset) {
+            allEntries = [];
+            targetQuintal = 50;
+            currentGroup = "Group A";
+            groupCounter = 1;
+            document.getElementById("targetDisplay").innerText = targetQuintal;
+            updateGroupDisplay();
+            saveData();
+            renderAll();
+        }
+    }
+
+    // ---------- ACTIONS ----------
+    function addEntry() {
+        let machine = parseFloat(document.getElementById("machineWeight").value);
+        if (isNaN(machine)) machine = 0;
+        if (machine === 0) {
+            alert("Machine weight daalo (kg)!");
+            return;
+        }
+        allEntries.push({
+            id: Date.now(),
+            group: currentGroup,
+            machine: machine,
+        });
+        getNextGroupAfterAdd();
+        document.getElementById("machineWeight").value = '';
+        renderAll();
+    }
+
+    function setTarget() {
+        let newQ = prompt("Enter target weight (Quintal):", targetQuintal);
+        if (newQ !== null && !isNaN(parseFloat(newQ))) {
+            targetQuintal = parseFloat(newQ);
+            document.getElementById("targetDisplay").innerText = targetQuintal;
+            renderAll();
+        }
+    }
+
+    // ---------- TAB SWITCHING ----------
+    function initTabs() {
+        const tabs = document.querySelectorAll(".tab");
+        const entryPage = document.getElementById("entryPage");
+        const summaryPage = document.getElementById("summaryPage");
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                const page = tab.getAttribute("data-page");
+                if (page === "entry") {
+                    entryPage.classList.add("active");
+                    summaryPage.classList.remove("active");
+                    renderEntryPage();
+                } else {
+                    entryPage.classList.remove("active");
+                    summaryPage.classList.add("active");
+                    renderSummaryPage();
+                }
+            });
+        });
+    }
+
+    // ---------- EVENT LISTENERS ----------
+    document.getElementById("addEntryBtn").addEventListener("click", addEntry);
+    document.getElementById("setTargetBtn").addEventListener("click", setTarget);
+    document.getElementById("resetAllBtn").addEventListener("click", resetAllData);
+    document.getElementById("resetAllBtnSummary").addEventListener("click", resetAllData);
+
+    // ---------- INIT ----------
+    loadData();
+    initTabs();
+    renderAll();
+</script>
+</body>
+</html>
