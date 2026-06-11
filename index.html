@@ -2,216 +2,478 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Dhan Mandi Weight Tracker</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --blue: #1e3a8a;
+            --blue-light: #2563eb;
+            --bg: #f4f7fc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --muted: #64748b;
+            --text: #1e293b;
+            --danger: #dc2626;
+            --danger-light: #fee2e2;
+            --warning-bg: #fff7ed;
+            --warning-border: #f97316;
+            --warning-text: #9a3412;
+        }
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #f4f7fc;
-            padding: 20px;
-            color: #1e293b;
+            font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 0;
         }
-        .container { max-width: 1300px; margin: 0 auto; }
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 1.8rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+
+        /* ── Header ── */
+        .app-header {
+            background: var(--blue);
+            color: white;
+            padding: 16px 20px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
+        .app-header h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .app-header p {
+            font-size: 0.78rem;
+            opacity: 0.75;
+            margin-top: 2px;
+        }
+
+        /* ── Tabs ── */
         .tabs {
             display: flex;
-            gap: 12px;
-            border-bottom: 3px solid #e2e8f0;
-            margin-bottom: 1.5rem;
+            background: var(--blue);
+            padding: 0 12px 12px;
+            gap: 8px;
         }
         .tab {
-            font-size: 1.1rem;
+            flex: 1;
+            text-align: center;
+            padding: 10px 8px;
+            border-radius: 24px;
+            font-size: 0.88rem;
             font-weight: 600;
-            padding: 10px 24px;
+            color: rgba(255,255,255,0.7);
             cursor: pointer;
-            border-radius: 30px;
-            color: #4b5563;
+            transition: background 0.2s, color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
-        .tab.active { background: #1e3a8a; color: white; }
+        .tab.active {
+            background: white;
+            color: var(--blue);
+        }
 
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            align-items: flex-end;
+        /* ── Pages ── */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .content {
+            padding: 16px;
+            max-width: 640px;
+            margin: 0 auto;
         }
-        .form-group { flex: 1; min-width: 160px; }
-        label {
-            font-size: 0.87rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
         }
-        input, select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #cbd5e1;
-            border-radius: 16px;
-            font-size: 1rem;
+
+        /* ── Progress card ── */
+        .progress-card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
         }
-        button {
-            background: #1e3a8a;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 32px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        button:hover { background: #2563eb; }
-        .btn-danger {
-            background: #dc2626;
-        }
-        .btn-danger:hover { background: #b91c1c; }
-        .warning {
-            background: #fff3e0;
-            border-left: 6px solid #f97316;
-            margin-top: 12px;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: bold;
-            color: #c2410c;
-        }
-        .group-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            margin-bottom: 1.2rem;
-            overflow: hidden;
-        }
-        .group-header {
-            background: #f1f5f9;
-            padding: 12px 18px;
-            font-weight: 700;
+        .progress-meta {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        .progress-meta span { color: var(--muted); }
+        .progress-meta strong { color: var(--text); }
+        .progress-bar-bg {
+            height: 22px;
+            background: #e2e8f0;
+            border-radius: 40px;
+            overflow: hidden;
+        }
+        #progressFill {
+            height: 100%;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 700;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .progress-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
             flex-wrap: wrap;
             gap: 8px;
         }
-        .entry-row {
-            padding: 12px 18px;
-            border-bottom: 1px solid #f1f5f9;
+        .target-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* ── Warning ── */
+        .warning {
+            background: var(--warning-bg);
+            border-left: 4px solid var(--warning-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--warning-text);
+            display: none;
+        }
+
+        /* ── Entry Form ── */
+        .form-section {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+        }
+        .form-section h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 14px;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: 500;
+            background: #f8fafc;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        input:focus { border-color: var(--blue-light); background: white; }
+        input[readonly] { background: #f1f5f9; color: var(--muted); cursor: default; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 32px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            text-decoration: none;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary {
+            background: var(--blue);
+            color: white;
+            width: 100%;
+        }
+        .btn-primary:hover { background: var(--blue-light); }
+        .btn-secondary {
+            background: #eef2ff;
+            color: var(--blue);
+            font-size: 0.85rem;
+            padding: 10px 16px;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-del {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-del:active { background: var(--danger); color: white; }
+
+        /* ── Group Cards ── */
+        .group-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .group-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .group-header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            margin-bottom: 4px;
         }
-        .del-btn {
-            background: #fee2e2;
-            color: #dc2626;
-            border: none;
-            padding: 6px 12px;
+        .group-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--blue);
+        }
+        .group-count {
+            font-size: 0.78rem;
+            background: #dbeafe;
+            color: var(--blue);
+            padding: 3px 10px;
             border-radius: 20px;
-            cursor: pointer;
+            font-weight: 600;
         }
-        .del-btn:hover { background: #dc2626; color: white; }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .summary-table th, .summary-table td {
-            border: 1px solid #e2e8f0;
-            padding: 10px;
-            text-align: left;
-        }
-        .summary-table th {
-            background: #f1f5f9;
-        }
-        .grand-total {
-            background: #1e3a8a;
-            color: white;
-            font-weight: bold;
-        }
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
-        .reset-section {
-            margin-top: 1rem;
+        .group-stats {
             display: flex;
-            justify-content: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
         }
-        @media (max-width: 640px) {
-            body { padding: 12px; }
-            .group-header { flex-direction: column; }
+        .group-stats span {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+        .group-stats strong { color: var(--text); }
+
+        .entry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .entry-row:last-child { border-bottom: none; }
+        .entry-weight {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .entry-sub {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* ── Summary ── */
+        .summary-grand {
+            background: var(--blue);
+            color: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        .summary-grand .big-num {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        .summary-grand .sub {
+            font-size: 0.88rem;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-card .stat-val {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--blue);
+        }
+        .stat-card .stat-lbl {
+            font-size: 0.76rem;
+            color: var(--muted);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .summary-group-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .sgc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+        .sgc-name { font-weight: 700; font-size: 0.95rem; color: var(--blue); }
+        .sgc-kg { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+        .sgc-body {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 16px;
+        }
+        .sgc-item { text-align: center; }
+        .sgc-item .v { font-weight: 700; font-size: 1rem; }
+        .sgc-item .l { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+        /* ── Empty state ── */
+        .empty {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--muted);
+        }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty p { font-size: 0.9rem; }
+
+        /* ── Section title ── */
+        .section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin: 20px 0 10px;
+        }
+
+        @media (min-width: 500px) {
+            .content { padding: 20px; }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="card">
-        <div class="tabs">
-            <div class="tab active" data-page="entry">📝 Weight Entry</div>
-            <div class="tab" data-page="summary">🧾 Poora Hisab (Groupwise)</div>
+
+<div class="app-header">
+    <h1>🌾 Dhan Mandi Tracker</h1>
+    <p>Weight entry & group-wise hisab</p>
+</div>
+
+<div class="tabs">
+    <div class="tab active" data-page="entry">📝 Entry</div>
+    <div class="tab" data-page="summary">🧾 Poora Hisab</div>
+</div>
+
+<!-- Entry Page -->
+<div id="entryPage" class="page active">
+    <div class="content">
+
+        <!-- Progress -->
+        <div class="progress-card">
+            <div class="progress-meta">
+                <span>🎯 Target: <strong><span id="targetDisplay">50</span> Quintal</strong></span>
+                <span>📦 Total: <strong><span id="totalWeightDisplay">0</span> kg</strong></span>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="progressFill">0%</div>
+            </div>
+            <div class="progress-actions">
+                <span class="target-label" id="quintalDisplay">0.00 Quintal</span>
+                <button class="btn btn-secondary" id="setTargetBtn">🎯 Target badlo</button>
+            </div>
+            <div class="warning" id="warningMessage"></div>
         </div>
 
-        <!-- Entry Page -->
-        <div id="entryPage" class="page active">
-            <h3>➕ New Weight Entry</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Current Group</label>
-                    <input type="text" id="groupDisplay" readonly style="background:#f1f5f9; font-weight:600;">
-                </div>
-                <div class="form-group">
-                    <label>Machine Weight (kg)</label>
-                    <input type="number" id="machineWeight" step="0.01" placeholder="125.5">
-                </div>
-                <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button id="addEntryBtn">➕ Add Entry (3 Bori)</button>
-                </div>
+        <!-- Form -->
+        <div class="form-section">
+            <h3>Naya entry daalo</h3>
+            <div class="form-group">
+                <label>Current Group</label>
+                <input type="text" id="groupDisplay" readonly>
             </div>
-            <div style="margin: 8px 0 0 10px; font-size:0.85rem; color:#475569;">ℹ️ Each entry adds 3 bori automatically.</div>
-
-            <div style="margin: 20px 0; background:#f8fafc; padding:15px; border-radius:16px;">
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
-                    <span>🎯 Target: <span id="targetDisplay">50</span> Quintal</span>
-                    <span>📦 Total Machine Weight: <span id="totalWeightDisplay">0</span> kg</span>
-                </div>
-                <div style="background:#e2e8f0; height:28px; border-radius:40px; margin-top:8px; overflow:hidden;">
-                    <div id="progressFill" style="background:linear-gradient(90deg,#1e3a8a,#3b82f6); height:100%; width:0%; display:flex; align-items:center; justify-content:flex-end; padding-right:12px; color:white; font-weight:bold;">0%</div>
-                </div>
-                <button id="setTargetBtn" style="margin-top:10px;">🎯 Change Target (Quintal)</button>
-                <div id="warningMessage" class="warning" style="display: none;"></div>
+            <div class="form-group">
+                <label>Machine Weight (kg)</label>
+                <input type="number" id="machineWeight" step="0.01" placeholder="e.g. 125.5" inputmode="decimal">
             </div>
-
-            <div id="entriesContainer"></div>
-
-            <div class="reset-section">
-                <button id="resetAllBtn" class="btn-danger">🗑️ Reset All Data</button>
-            </div>
+            <p style="font-size:0.8rem; color:var(--muted); margin-bottom:12px;">ℹ️ Har entry mein 3 bori automatically add hoti hai</p>
+            <button class="btn btn-primary" id="addEntryBtn">➕ Entry Add Karo (3 Bori)</button>
         </div>
 
-        <!-- Summary Page -->
-        <div id="summaryPage" class="page">
-            <h3>📊 Groupwise Summary & Grand Total</h3>
-            <div id="summaryContent"></div>
-            <div class="reset-section">
-                <button id="resetAllBtnSummary" class="btn-danger">🗑️ Reset All Data</button>
-            </div>
-        </div>
+        <!-- Entries -->
+        <div id="entriesContainer"></div>
+
+        <!-- Reset -->
+        <button class="btn btn-danger" id="resetAllBtn">🗑️ Saara Data Reset Karo</button>
+        <div style="height:24px;"></div>
     </div>
 </div>
 
+<!-- Summary Page -->
+<div id="summaryPage" class="page">
+    <div class="content" id="summaryContent"></div>
+</div>
+
 <script>
-    // ---------- DATA ----------
     let allEntries = [];
     let targetQuintal = 50;
     let currentGroup = "Group A";
     let groupCounter = 1;
 
-    // ---------- HELPERS ----------
     function loadData() {
         const stored = localStorage.getItem("weightTrackerData");
         if (stored) {
@@ -224,8 +486,8 @@
             } catch(e) {}
         }
         if (allEntries.length > 0) {
-            const lastEntry = allEntries[allEntries.length - 1];
-            if (lastEntry && lastEntry.group) currentGroup = lastEntry.group;
+            const last = allEntries[allEntries.length - 1];
+            if (last && last.group) currentGroup = last.group;
         } else {
             currentGroup = "Group A";
             groupCounter = 1;
@@ -235,10 +497,7 @@
 
     function saveData() {
         localStorage.setItem("weightTrackerData", JSON.stringify({
-            entries: allEntries,
-            targetQuintal: targetQuintal,
-            currentGroup: currentGroup,
-            groupCounter: groupCounter
+            entries: allEntries, targetQuintal, currentGroup, groupCounter
         }));
     }
 
@@ -247,8 +506,8 @@
     }
 
     function getNextGroupAfterAdd() {
-        const currentGroupEntries = allEntries.filter(e => e.group === currentGroup);
-        if (currentGroupEntries.length >= 10) {
+        const n = allEntries.filter(e => e.group === currentGroup).length;
+        if (n >= 10) {
             groupCounter++;
             currentGroup = `Group ${String.fromCharCode(64 + groupCounter)}`;
             updateGroupDisplay();
@@ -256,149 +515,162 @@
     }
 
     function getTotalMachineWeight() {
-        return allEntries.reduce((sum, e) => sum + (e.machine || 0), 0);
+        return allEntries.reduce((s, e) => s + (e.machine || 0), 0);
     }
 
-    function getTotalBoriCount() {
-        return allEntries.length * 3;
-    }
-
-    // ---------- WARNING & PROGRESS ----------
     function updateProgressAndWarning() {
         const totalKg = getTotalMachineWeight();
         const targetKg = targetQuintal * 100;
-        let percent = (totalKg / targetKg) * 100;
-        const isOver = percent > 100;
-        const progressFill = document.getElementById("progressFill");
-        const warningDiv = document.getElementById("warningMessage");
+        const pct = totalKg / targetKg * 100;
+        const fill = document.getElementById("progressFill");
+        const warn = document.getElementById("warningMessage");
 
-        if (isOver) {
-            progressFill.style.background = "linear-gradient(90deg, #dc2626, #f97316)";
-            const overPercent = percent.toFixed(1);
-            warningDiv.style.display = "block";
-            warningDiv.innerHTML = `⚠️ WARNING: Total weight (${totalKg.toFixed(2)} kg) is ${overPercent}% of target (${targetKg.toFixed(0)} kg). Target exceeded by ${(totalKg - targetKg).toFixed(2)} kg.`;
-            progressFill.style.width = `100%`;
-            progressFill.innerHTML = `${overPercent}% (Over)`;
+        if (pct > 100) {
+            fill.style.background = "linear-gradient(90deg,#dc2626,#f97316)";
+            fill.style.width = "100%";
+            fill.textContent = `${pct.toFixed(1)}%`;
+            warn.style.display = "block";
+            warn.textContent = `⚠️ Target exceed ho gaya! ${totalKg.toFixed(2)} kg = ${pct.toFixed(1)}% (${(totalKg - targetKg).toFixed(2)} kg zyada)`;
         } else {
-            progressFill.style.background = "linear-gradient(90deg, #1e3a8a, #3b82f6)";
-            warningDiv.style.display = "none";
-            let displayPercent = percent;
-            progressFill.style.width = `${displayPercent}%`;
-            progressFill.innerHTML = `${displayPercent.toFixed(1)}%`;
+            fill.style.background = "linear-gradient(90deg,#1e3a8a,#3b82f6)";
+            fill.style.width = `${pct}%`;
+            fill.textContent = pct < 5 ? '' : `${pct.toFixed(1)}%`;
+            warn.style.display = "none";
         }
-        document.getElementById("totalWeightDisplay").innerHTML = `${totalKg.toFixed(2)} kg`;
+
+        document.getElementById("totalWeightDisplay").textContent = `${totalKg.toFixed(2)}`;
+        document.getElementById("quintalDisplay").textContent = `${(totalKg/100).toFixed(2)} Quintal`;
+        document.getElementById("targetDisplay").textContent = targetQuintal;
     }
 
-    // ---------- RENDER ENTRY PAGE ----------
     function renderEntryPage() {
         updateProgressAndWarning();
         const container = document.getElementById("entriesContainer");
+
+        if (allEntries.length === 0) {
+            container.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Abhi koi entry nahi hai.<br>Pehli entry daalo!</p></div>`;
+            return;
+        }
+
         const grouped = {};
         allEntries.forEach(e => {
             if (!grouped[e.group]) grouped[e.group] = [];
             grouped[e.group].push(e);
         });
 
-        let html = '';
+        let html = `<div class="section-title">Saari Entries</div>`;
         for (const [group, entries] of Object.entries(grouped)) {
-            const groupMachine = entries.reduce((s, e) => s + e.machine, 0);
-            const groupBoriCount = entries.length * 3;
+            const groupKg = entries.reduce((s, e) => s + e.machine, 0);
+            const groupBori = entries.length * 3;
             html += `
-                <div class="group-card">
-                    <div class="group-header">
-                        <span>📁 ${group} (${entries.length}/10 entries)</span>
-                        <span>🔰 Group Total Machine: ${groupMachine.toFixed(2)} kg | 🛍️ Total Bori: ${groupBoriCount}</span>
-                    </div>`;
-            entries.forEach(entry => {
+            <div class="group-card">
+                <div class="group-header">
+                    <div class="group-header-top">
+                        <span class="group-name">📁 ${group}</span>
+                        <span class="group-count">${entries.length}/10</span>
+                    </div>
+                    <div class="group-stats">
+                        <span>Machine: <strong>${groupKg.toFixed(2)} kg</strong></span>
+                        <span>Bori: <strong>${groupBori}</strong></span>
+                    </div>
+                </div>`;
+            entries.forEach((entry, i) => {
                 html += `
-                    <div class="entry-row">
-                        <div>⚙️ Machine: ${entry.machine.toFixed(2)} kg</div>
-                        <div><strong>${entry.machine.toFixed(2)} kg</strong> <button class="del-btn" data-id="${entry.id}">🗑️ Remove</button></div>
-                    </div>`;
+                <div class="entry-row">
+                    <div>
+                        <div class="entry-weight">⚙️ ${entry.machine.toFixed(2)} kg</div>
+                        <div class="entry-sub">3 bori</div>
+                    </div>
+                    <button class="btn-del" data-id="${entry.id}">🗑️ Hatao</button>
+                </div>`;
             });
             html += `</div>`;
         }
-        container.innerHTML = html || `<p style="text-align:center; padding:40px;">✨ No entries yet. Add your first weight! ✨</p>`;
+        container.innerHTML = html;
 
-        // Delete with confirmation
-        document.querySelectorAll('.del-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        container.querySelectorAll('.btn-del').forEach(btn => {
+            btn.addEventListener('click', () => {
                 const id = parseInt(btn.getAttribute('data-id'));
                 const entry = allEntries.find(e => e.id === id);
                 if (!entry) return;
-                const confirmDel = confirm(`Delete this entry?\nGroup: ${entry.group}\nMachine: ${entry.machine.toFixed(2)} kg\n(Each entry = 3 bori)\nThis action cannot be undone.`);
-                if (confirmDel) {
+                if (confirm(`Ye entry delete karo?\n${entry.group}: ${entry.machine.toFixed(2)} kg\n(3 bori hategi)`)) {
                     allEntries = allEntries.filter(e => e.id !== id);
                     if (allEntries.length === 0) {
-                        currentGroup = "Group A";
-                        groupCounter = 1;
-                        updateGroupDisplay();
+                        currentGroup = "Group A"; groupCounter = 1; updateGroupDisplay();
                     }
-                    saveData();
-                    renderAll();
+                    saveData(); renderAll();
                 }
             });
         });
     }
 
-    // ---------- RENDER SUMMARY PAGE ----------
     function renderSummaryPage() {
         const container = document.getElementById("summaryContent");
         if (allEntries.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:40px;">📭 No data to show. Add entries first.</div>`;
+            container.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><p>Koi data nahi hai.<br>Pehle entries daalo.</p></div>`;
             return;
         }
+
         const grouped = {};
         allEntries.forEach(e => {
             if (!grouped[e.group]) grouped[e.group] = [];
             grouped[e.group].push(e);
         });
 
-        let html = `<table class="summary-table">
-                        <thead>
-                            <tr>
-                                <th>Group</th>
-                                <th>Entries</th>
-                                <th>Total Machine (kg)</th>
-                                <th>Total Bori Count</th>
-                                <th>Group Total (kg)</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-        let grandMachine = 0, grandBori = 0;
-        for (const [group, entries] of Object.entries(grouped)) {
-            const groupMachine = entries.reduce((s, e) => s + e.machine, 0);
-            const groupBori = entries.length * 3;
-            grandMachine += groupMachine;
-            grandBori += groupBori;
-            html += `<tr>
-                        <td><strong>${group}</strong></td>
-                        <td>${entries.length}</td>
-                        <td>${groupMachine.toFixed(2)} kg</td>
-                        <td>${groupBori}</td>
-                        <td><strong>${groupMachine.toFixed(2)} kg</strong></td>
-                    </tr>`;
-        }
-        html += `</tbody>
-                <tfoot>
-                    <tr class="grand-total">
-                        <td><strong>🎯 GRAND TOTAL</strong></td>
-                        <td><strong>${allEntries.length}</strong></td>
-                        <td><strong>${grandMachine.toFixed(2)} kg</strong></td>
-                        <td><strong>${grandBori}</strong></td>
-                        <td><strong>${grandMachine.toFixed(2)} kg</strong></td>
-                    </tr>
-                </tfoot>
-              </table>`;
-
+        const grandKg = allEntries.reduce((s, e) => s + e.machine, 0);
+        const grandBori = allEntries.length * 3;
         const targetKg = targetQuintal * 100;
-        const overText = grandMachine > targetKg ? ` (Exceeds target by ${(grandMachine - targetKg).toFixed(2)} kg, ${((grandMachine/targetKg)*100).toFixed(1)}%)` : '';
-        html += `<div style="margin-top:20px; background:#eef2ff; padding:15px; border-radius:16px; text-align:center;">
-                    <p style="font-size:1.2rem;">🏆 Overall Total Machine Weight: <strong>${grandMachine.toFixed(2)} kg</strong> = <strong>${(grandMachine/100).toFixed(2)} Quintal</strong>${overText}</p>
-                    <p>🛍️ Total Bori Count: <strong>${grandBori}</strong> (each entry = 3 bori)</p>
-                    <p>🎯 Target: ${targetQuintal} Quintal (${targetKg} kg)</p>
-                 </div>`;
+        const over = grandKg > targetKg;
+
+        let html = `
+        <div class="summary-grand">
+            <div class="sub" style="margin-bottom:6px">Kul Machine Weight</div>
+            <div class="big-num">${grandKg.toFixed(2)} kg</div>
+            <div class="sub">${(grandKg/100).toFixed(2)} Quintal${over ? ` · Target se ${(grandKg-targetKg).toFixed(2)} kg zyada ⚠️` : ''}</div>
+        </div>
+        <div class="summary-grid">
+            <div class="stat-card">
+                <div class="stat-val">${grandBori}</div>
+                <div class="stat-lbl">Total Bori</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val">${allEntries.length}</div>
+                <div class="stat-lbl">Total Entries</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val">${targetQuintal}</div>
+                <div class="stat-lbl">Target (Quintal)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val">${Object.keys(grouped).length}</div>
+                <div class="stat-lbl">Groups</div>
+            </div>
+        </div>
+        <div class="section-title">Groupwise Breakdown</div>`;
+
+        for (const [group, entries] of Object.entries(grouped)) {
+            const gKg = entries.reduce((s, e) => s + e.machine, 0);
+            const gBori = entries.length * 3;
+            html += `
+            <div class="summary-group-card">
+                <div class="sgc-header">
+                    <span class="sgc-name">📁 ${group}</span>
+                    <span class="sgc-kg">${gKg.toFixed(2)} kg</span>
+                </div>
+                <div class="sgc-body">
+                    <div class="sgc-item"><div class="v">${entries.length}</div><div class="l">Entries</div></div>
+                    <div class="sgc-item"><div class="v">${gBori}</div><div class="l">Bori</div></div>
+                    <div class="sgc-item"><div class="v">${(gKg/100).toFixed(2)}</div><div class="l">Quintal</div></div>
+                </div>
+            </div>`;
+        }
+
+        html += `
+        <button class="btn btn-danger" id="resetAllBtnSummary" style="margin-top:4px;">🗑️ Saara Data Reset Karo</button>
+        <div style="height:24px;"></div>`;
+
         container.innerHTML = html;
+        document.getElementById("resetAllBtnSummary").addEventListener('click', resetAllData);
     }
 
     function renderAll() {
@@ -407,80 +679,53 @@
         saveData();
     }
 
-    // ---------- RESET ALL DATA (with confirmation) ----------
     function resetAllData() {
-        const confirmReset = confirm("⚠️ Are you sure? This will delete ALL entries and reset target to 50 Quintal.\nThis action cannot be undone.");
-        if (confirmReset) {
-            allEntries = [];
-            targetQuintal = 50;
-            currentGroup = "Group A";
-            groupCounter = 1;
-            document.getElementById("targetDisplay").innerText = targetQuintal;
-            updateGroupDisplay();
-            saveData();
-            renderAll();
+        if (confirm("⚠️ Pakka? Saari entries aur target delete ho jayega.\nYe action wapas nahi ho sakti.")) {
+            allEntries = []; targetQuintal = 50; currentGroup = "Group A"; groupCounter = 1;
+            updateGroupDisplay(); saveData(); renderAll();
         }
     }
 
-    // ---------- ACTIONS ----------
     function addEntry() {
-        let machine = parseFloat(document.getElementById("machineWeight").value);
-        if (isNaN(machine)) machine = 0;
-        if (machine === 0) {
-            alert("Machine weight daalo (kg)!");
-            return;
-        }
-        allEntries.push({
-            id: Date.now(),
-            group: currentGroup,
-            machine: machine,
-        });
+        const val = parseFloat(document.getElementById("machineWeight").value);
+        if (!val || val <= 0) { alert("Machine weight daalo (kg)!"); return; }
+        allEntries.push({ id: Date.now(), group: currentGroup, machine: val });
         getNextGroupAfterAdd();
         document.getElementById("machineWeight").value = '';
+        document.getElementById("machineWeight").focus();
         renderAll();
     }
 
     function setTarget() {
-        let newQ = prompt("Enter target weight (Quintal):", targetQuintal);
-        if (newQ !== null && !isNaN(parseFloat(newQ))) {
-            targetQuintal = parseFloat(newQ);
-            document.getElementById("targetDisplay").innerText = targetQuintal;
+        const val = prompt("Target weight (Quintal) daalo:", targetQuintal);
+        if (val !== null && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
+            targetQuintal = parseFloat(val);
             renderAll();
         }
     }
 
-    // ---------- TAB SWITCHING ----------
-    function initTabs() {
-        const tabs = document.querySelectorAll(".tab");
-        const entryPage = document.getElementById("entryPage");
-        const summaryPage = document.getElementById("summaryPage");
-        tabs.forEach(tab => {
-            tab.addEventListener("click", () => {
-                tabs.forEach(t => t.classList.remove("active"));
-                tab.classList.add("active");
-                const page = tab.getAttribute("data-page");
-                if (page === "entry") {
-                    entryPage.classList.add("active");
-                    summaryPage.classList.remove("active");
-                    renderEntryPage();
-                } else {
-                    entryPage.classList.remove("active");
-                    summaryPage.classList.add("active");
-                    renderSummaryPage();
-                }
-            });
+    // Tabs
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            const page = tab.getAttribute("data-page");
+            document.getElementById("entryPage").classList.toggle("active", page === "entry");
+            document.getElementById("summaryPage").classList.toggle("active", page === "summary");
+            if (page === "entry") renderEntryPage(); else renderSummaryPage();
         });
-    }
+    });
 
-    // ---------- EVENT LISTENERS ----------
     document.getElementById("addEntryBtn").addEventListener("click", addEntry);
     document.getElementById("setTargetBtn").addEventListener("click", setTarget);
     document.getElementById("resetAllBtn").addEventListener("click", resetAllData);
-    document.getElementById("resetAllBtnSummary").addEventListener("click", resetAllData);
 
-    // ---------- INIT ----------
+    // Enter key support
+    document.getElementById("machineWeight").addEventListener("keydown", e => {
+        if (e.key === "Enter") addEntry();
+    });
+
     loadData();
-    initTabs();
     renderAll();
 </script>
 </body>
